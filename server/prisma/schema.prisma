@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum GuestStatus {
+  INVITED
+  CONFIRMED
+  DECLINED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  events       Event[]
+  announcements Announcement[]
+
+  @@map("users")
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  date        DateTime
+  location    String?
+  createdBy   String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  creator User    @relation(fields: [createdBy], references: [id])
+  guests  Guest[]
+
+  @@map("events")
+}
+
+model Guest {
+  id        String      @id @default(uuid())
+  name      String
+  email     String?
+  phone     String?
+  status    GuestStatus @default(INVITED)
+  eventId   String
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("guests")
+}
+
+model Announcement {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  createdBy String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  creator User @relation(fields: [createdBy], references: [id])
+
+  @@map("announcements")
+}
+
+model Donation {
+  id            String        @id @default(uuid())
+  donorName     String
+  amount        Float
+  message       String?
+  paymentStatus PaymentStatus @default(PENDING)
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  @@map("donations")
+}
