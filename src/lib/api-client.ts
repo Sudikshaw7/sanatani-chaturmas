@@ -46,7 +46,12 @@ async function request<T>(
     throw new ApiError(401, 'Unauthorized');
   }
 
-  const json: ApiResponse<T> = await res.json();
+  let json: ApiResponse<T>;
+  try {
+    json = await res.json();
+  } catch {
+    throw new ApiError(res.status, `Server error (status ${res.status})`);
+  }
 
   if (!json.success) {
     throw new ApiError(res.status, json.error || 'Unknown error');
